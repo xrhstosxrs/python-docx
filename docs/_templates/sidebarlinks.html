@@ -1,6 +1,64 @@
-<h3>Useful Links</h3>
-<ul>
-  <li><a href="http://github.com/python-openxml/python-docx">python-docx @ GitHub</a></li>
-  <li><a href="http://pypi.python.org/pypi/python-docx">python-docx @ PyPI</a></li>
-  <li><a href="http://github.com/python-openxml/python-docx/issues">Issue Tracker</a></li>
-</ul>
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
+import android.os.Bundle;
+import androidx.appcompat.app.AppCompatActivity;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.UUID;
+
+public class MainActivity extends AppCompatActivity {
+
+    private BluetoothAdapter bluetoothAdapter;
+    private BluetoothSocket bluetoothSocket;
+    private BluetoothDevice bluetoothDevice;
+    private OutputStream outputStream;
+
+    // UUID για την επικοινωνία μέσω Bluetooth
+    private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // Αρχικοποίηση του Bluetooth Adapter
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter == null) {
+            // Η συσκευή δεν υποστηρίζει Bluetooth
+            return;
+        }
+
+        // Βεβαιωθείτε ότι το Bluetooth είναι ενεργοποιημένο
+        if (!bluetoothAdapter.isEnabled()) {
+            // Ζητήστε από το χρήστη να ενεργοποιήσει το Bluetooth
+            // Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            // startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+
+        // Σύνδεση με το Arduino μέσω Bluetooth
+        bluetoothDevice = bluetoothAdapter.getRemoteDevice("XX:XX:XX:XX:XX:XX"); // Το MAC address του Arduino
+        try {
+            bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(MY_UUID);
+            bluetoothSocket.connect();
+            outputStream = bluetoothSocket.getOutputStream();
+
+            // Αποστολή εντολής για ενεργοποίηση μιας συσκευής
+            String command = "TURN_ON_LIGHT";
+            outputStream.write(command.getBytes());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        try {
+            bluetoothSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
